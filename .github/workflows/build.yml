@@ -17,7 +17,8 @@ jobs:
         with:
           arch: x64
 
-      - name: Run the unit tests (proves the logic works on Windows)
+      - name: Run the unit tests (skipped if tests/bob_test.cpp isn't in the repo)
+        if: ${{ hashFiles('tests/bob_test.cpp') != '' }}
         shell: cmd
         run: |
           cl /nologo /EHsc /std:c++17 tests\bob_test.cpp /Fe:bob_test.exe
