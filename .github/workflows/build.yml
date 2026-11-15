@@ -1,0 +1,44 @@
+name: Build cpbob.dll and cpbob_inject.exe
+
+# Runs on every upload (push) and also has a manual "Run workflow" button.
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Get the files from the repo
+        uses: actions/checkout@v4
+
+      - name: Set up the Visual Studio 64-bit compiler
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Run the unit tests (proves the logic works on Windows)
+        shell: cmd
+        run: |
+          cl /nologo /EHsc /std:c++17 tests\bob_test.cpp /Fe:bob_test.exe
+          bob_test.exe
+
+      - name: Build cpbob.dll
+        shell: cmd
+        run: cl /nologo /O2 /GL /MT /EHsc /LD cpbob.cpp /link /OUT:cpbob.dll
+
+      - name: Build cpbob_inject.exe
+        shell: cmd
+        run: cl /nologo /O2 /MT /EHsc cpbob_inject.cpp /link /OUT:cpbob_inject.exe advapi32.lib
+
+      - name: Show what was built
+        shell: cmd
+        run: dir cpbob.dll cpbob_inject.exe
+
+      - name: Save the results so you can download them
+        uses: actions/upload-artifact@v4
+        with:
+          name: cpbob-build
+          path: |
+            cpbob.dll
+            cpbob_inject.exe
